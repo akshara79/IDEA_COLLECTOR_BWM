@@ -1,0 +1,123 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String?
+  email     String?  @unique
+  role      String   @default("student")
+  createdAt DateTime @default(now())
+  ideas     Idea[]
+  votes     Vote[]
+  comments  Comment[]
+  exports   Export[]
+}
+
+model Campaign {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  createdById String?
+  createdBy   User?    @relation(fields: [createdById], references: [id])
+  startsAt    DateTime?
+  endsAt      DateTime?
+  visibility  String   @default("campus")
+  createdAt   DateTime @default(now())
+  ideas       Idea[]
+  clusters    Cluster[]
+  exports     Export[]
+}
+
+model Idea {
+  id          String     @id @default(uuid())
+  campaign    Campaign   @relation(fields: [campaignId], references: [id])
+  campaignId  String
+  user        User?      @relation(fields: [userId], references: [id])
+  userId      String?
+  title       String
+  description String
+  isAnonymous Boolean    @default(false)
+  status      String     @default("active")
+  createdAt   DateTime   @default(now())
+  embedding   IdeaEmbedding?
+  tags        IdeaTag[]
+  votes       Vote[]
+  comments    Comment[]
+  clusterMembers ClusterMember[]
+}
+
+model IdeaEmbedding {
+  idea       Idea    @relation(fields: [ideaId], references: [id])
+  ideaId     String  @id
+  vector     Float[] @db.Float8[]
+  updatedAt  DateTime @default(now())
+}
+
+model Tag {
+  id   String @id @default(uuid())
+  name String @unique
+  ideas IdeaTag[]
+}
+
+model IdeaTag {
+  idea   Idea   @relation(fields: [ideaId], references: [id])
+  ideaId String
+  tag    Tag    @relation(fields: [tagId], references: [id])
+  tagId  String
+  @@id([ideaId, tagId])
+}
+
+model Vote {
+  id       String  @id @default(uuid())
+  idea     Idea    @relation(fields: [ideaId], references: [id])
+  ideaId   String
+  user     User?   @relation(fields: [userId], references: [id])
+  userId   String?
+  createdAt DateTime @default(now())
+
+  @@unique([ideaId, userId])
+}
+
+model Comment {
+  id        String  @id @default(uuid())
+  idea      Idea    @relation(fields: [ideaId], references: [id])
+  ideaId    String
+  user      User?   @relation(fields: [userId], references: [id])
+  userId    String?
+  body      String
+  createdAt DateTime @default(now())
+}
+
+model Cluster {
+  id         String   @id @default(uuid())
+  campaign   Campaign @relation(fields: [campaignId], references: [id])
+  campaignId String
+  label      String?
+  summary    String?
+  createdAt  DateTime @default(now())
+  members    ClusterMember[]
+}
+
+model ClusterMember {
+  cluster   Cluster @relation(fields: [clusterId], references: [id])
+  clusterId String
+  idea      Idea    @relation(fields: [ideaId], references: [id])
+  ideaId    String
+  @@id([clusterId, ideaId])
+}
+
+model Export {
+  id         String   @id @default(uuid())
+  campaign   Campaign @relation(fields: [campaignId], references: [id])
+  campaignId String
+  exportedBy User?    @relation(fields: [exportedById], references: [id])
+  exportedById String?
+  exportType String
+  createdAt  DateTime @default(now())
+}

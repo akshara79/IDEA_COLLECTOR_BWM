@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin — Campaign</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="admin.html" class="muted">&larr; Admin</a>
+      <h1 id="title">Campaign Admin</h1>
+    </header>
+
+    <main>
+      <section class="card">
+        <button id="run-cluster" class="button">Run clustering & summarize</button>
+        <button id="download-csv" class="button button-outline">Export CSV</button>
+        <div id="run-status" class="muted" style="margin-top:8px"></div>
+      </section>
+
+      <section class="card">
+        <h3>Clusters</h3>
+        <div id="clusters-container"></div>
+        <div id="clusters-empty" class="muted" style="display:none">No clusters (run clustering first).</div>
+      </section>
+    </main>
+  </div>
+
+  <script src="scripts.js"></script>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const campaignId = params.get('id');
+    if (!campaignId) {
+      alert('campaign id missing');
+    }
+
+    document.getElementById('run-cluster').addEventListener('click', async () => {
+      const status = document.getElementById('run-status');
+      status.textContent = 'Queueing clustering job...';
+      try {
+        await apiPost(`/api/campaigns/${campaignId}/cluster`, {});
+        status.textContent = 'Clustering queued. Worker will process and update clusters.';
+      } catch (err) {
+        console.error(err);
+        status.textContent = 'Failed to queue clustering';
+      }
+    });
+
+    document.getElementById('download-csv').addEventListener('click', () => {
+      window.location.href = `/api/campaigns/${campaignId}/export`;
+    });
+
+    async function loadClusters() {
+      try {
+        // This endpoint was not provided in the minimal API earlier; if missing the backend should expose it.
+        const clusters = await apiGet(`/api/campaigns/${campaignId}/clusters`);
+        const container = document.getElementById('clusters-container');
+        container.innerHTML = '';
+        if (!clusters || clusters.length === 0) {
+          document.getElementById('clusters-empty').style.display = 'block';
+          return;
+        }
+        document.getElementById('clusters-empty').style.display = 'none';
+        clusters.forEach(c => {
+          const div = document.createElement('div');
+          div.className = 'card';
+          const members = (c.members || []).map(m => `<li><strong>${escapeHtml(m.idea.title)}</strong> — ${escapeHtml(m.idea.description)}</li>`).join('');
+          div.innerHTML = `<h4>${escapeHtml(c.label || 'Untitled')}</h4>
+            <pre class="mono">${escapeHtml(c.summary || '')}</pre>
+            <p>Members:</p>
+            <ul>${members}</ul>`;
+          container.appendChild(div);
+        });
+      } catch (err) {
+        console.error(err);
+        // fallback: try to get clusters from /api/admin/campaign/:id or show message
+        document.getElementById('clusters-empty').textContent = 'Failed to load clusters (ensure backend has an endpoint at /api/campaigns/:id/clusters).';
+        document.getElementById('clusters-empty').style.display = 'block';
+      }
+    }
+
+    // Poll clusters occasionally so admin sees updates after worker runs
+    loadClusters();
+    setInterval(loadClusters, 10000);
+  </script>
+</body>
+</html>

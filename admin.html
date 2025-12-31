@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin Dashboard — Idea Collector</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="index.html" class="muted">&larr; Home</a>
+      <h1>Admin Dashboard</h1>
+      <p class="muted">Manage campaigns and run clustering</p>
+    </header>
+
+    <main>
+      <section class="card">
+        <h3>Campaigns</h3>
+        <ul id="admin-campaign-list" class="list"></ul>
+        <div id="admin-empty" class="muted" style="display:none">No campaigns.</div>
+      </section>
+    </main>
+  </div>
+
+  <script src="scripts.js"></script>
+  <script>
+    async function load() {
+      try {
+        const campaigns = await apiGet('/api/campaigns');
+        const ul = document.getElementById('admin-campaign-list');
+        ul.innerHTML = '';
+        if (!campaigns || campaigns.length === 0) {
+          document.getElementById('admin-empty').style.display = 'block';
+          return;
+        }
+        document.getElementById('admin-empty').style.display = 'none';
+        campaigns.forEach(c => {
+          const li = document.createElement('li');
+          li.className = 'list-item';
+          li.innerHTML = `<div>
+            <a class="link" href="admin_campaign.html?id=${c.id}">${escapeHtml(c.title)}</a>
+            <div class="muted small">${escapeHtml(c.description || '')}</div>
+          </div>
+          <div class="small muted">${new Date(c.createdAt).toLocaleString()}</div>`;
+          ul.appendChild(li);
+        });
+      } catch (err) {
+        console.error(err);
+        document.getElementById('admin-empty').textContent = 'Failed to load campaigns.';
+        document.getElementById('admin-empty').style.display = 'block';
+      }
+    }
+    load();
+  </script>
+</body>
+</html>

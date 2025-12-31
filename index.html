@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Idea Collector — Home</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Idea Collector</h1>
+      <p class="muted">Collect student ideas for sustainability & innovation</p>
+    </header>
+
+    <main>
+      <section class="card">
+        <div class="row between">
+          <h2>Campaigns</h2>
+          <div>
+            <a href="new_campaign.html" class="button">Create Campaign</a>
+            <a href="admin.html" class="button button-outline">Admin</a>
+          </div>
+        </div>
+        <ul id="campaign-list" class="list"></ul>
+        <div id="campaign-empty" class="muted" style="display:none">No campaigns yet.</div>
+      </section>
+    </main>
+
+    <footer class="muted">Local demo. Backend API expected at /api/*</footer>
+  </div>
+
+  <script src="scripts.js"></script>
+  <script>
+    async function loadCampaigns() {
+      try {
+        const campaigns = await apiGet('/api/campaigns');
+        const list = document.getElementById('campaign-list');
+        list.innerHTML = '';
+        if (!campaigns || campaigns.length === 0) {
+          document.getElementById('campaign-empty').style.display = 'block';
+          return;
+        }
+        document.getElementById('campaign-empty').style.display = 'none';
+        campaigns.forEach(c => {
+          const li = document.createElement('li');
+          li.className = 'list-item';
+          li.innerHTML = `
+            <div>
+              <a class="link" href="campaign.html?id=${c.id}">${escapeHtml(c.title)}</a>
+              <div class="muted small">${escapeHtml(c.description || '')}</div>
+            </div>
+            <div class="small muted">${new Date(c.createdAt).toLocaleString()}</div>
+          `;
+          list.appendChild(li);
+        });
+      } catch (err) {
+        console.error(err);
+        document.getElementById('campaign-empty').textContent = 'Failed to load campaigns.';
+        document.getElementById('campaign-empty').style.display = 'block';
+      }
+    }
+    loadCampaigns();
+  </script>
+</body>
+</html>

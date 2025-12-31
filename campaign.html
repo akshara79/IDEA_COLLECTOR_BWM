@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Campaign — Idea Collector</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="index.html" class="muted">&larr; Home</a>
+      <h1 id="campaign-title">Campaign</h1>
+      <p id="campaign-desc" class="muted"></p>
+    </header>
+
+    <main>
+      <section class="card">
+        <h3>Submit an Idea</h3>
+        <form id="idea-form">
+          <label>Title</label>
+          <input id="idea-title" class="input" required />
+          <label>Description</label>
+          <textarea id="idea-desc" class="input" rows="4" required></textarea>
+          <label><input type="checkbox" id="idea-anon" /> Submit anonymously</label>
+          <div style="margin-top:12px;">
+            <button class="button" type="submit">Submit Idea</button>
+            <a id="admin-link" class="button button-outline" href="#">Admin</a>
+          </div>
+        </form>
+        <div id="idea-status" class="muted" style="margin-top:8px"></div>
+      </section>
+
+      <section class="card">
+        <h3>Ideas</h3>
+        <ul id="ideas-list" class="list"></ul>
+        <div id="ideas-empty" class="muted" style="display:none">No ideas yet.</div>
+      </section>
+    </main>
+  </div>
+
+  <script src="scripts.js"></script>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const campaignId = params.get('id');
+    if (!campaignId) {
+      alert('Campaign id missing');
+      throw new Error('Missing campaign id');
+    }
+    document.getElementById('admin-link').href = `admin_campaign.html?id=${campaignId}`;
+
+    async function loadCampaign() {
+      try {
+        const campaign = await apiGet(`/api/campaigns`);
+        // find campaign by id (API returns list). Fallback: attempt dedicated endpoint not present.
+      } catch(e) {
+        // fallback, try GET /api/campaigns/:id if implemented
+      }
+
+      try {
+        const res = await apiGet(`/api/campaigns/${campaignId}/ideas`);
+        const list = document.getElementById('ideas-list');
+        list.innerHTML = '';
+        if (!res || res.length === 0) {
+          document.getElementById('ideas-empty').style.display = 'block';
+        } else {
+          document.getElementById('ideas-empty').style.display = 'none';
+          res.forEach(it => {
+            const li = document.createElement('li');
+            li.className = 'list-item';
+            li.innerHTML = `<div><strong>${escapeHtml(it.title)}</strong><div class="muted small">${escapeHtml(it.description)}</div></div>
+            <div class="muted small">${new Date(it.createdAt).toLocaleString()}</div>`;
+            list.appendChild(li);
+          });
+        }
+      } catch (err) {
+        console.error(err);
+        document.getElementById('ideas-empty').textContent = 'Failed to load ideas.';
+        document.getElementById('ideas-empty').style.display = 'block';
+      }
+    }
+
+    // Load campaign title/desc via /api/campaigns (list) then filter; if backend provides /api/campaigns/:id implement it
+    (async function loadCampaignMeta() {
+      try {
+        const campaigns = await apiGet('/api/campaigns');
+        const c = campaigns.find(x => x.id === campaignId);
+        if (c) {
+          document.getElementById('campaign-title').textContent = c.title;
+          document.getElementById('campaign-desc').textContent = c.description || '';
+        } else {
+          document.getElementById('campaign-title').textContent = 'Campaign';
+        }
+      } catch (err) {
+        console.warn('Could not load campaign meta', err);
+      }
+    })();
+
+    document.getElementById('idea-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const title = document.getElementById('idea-title').value.trim();
+      const description = document.getElementById('idea-desc').value.trim();
+      const isAnonymous = document.getElementById('idea-anon').checked;
+      if (!title || !description) return alert('Title and description are required');
+      const status = document.getElementById('idea-status');
+      status.textContent = 'Submitting...';
+      try {
+        await apiPost(`/api/campaigns/${campaignId}/ideas`, { title, description, isAnonymous });
+        status.textContent = 'Submitted — processing in background.';
+        // clear form
+        document.getElementById('idea-title').value = '';
+        document.getElementById('idea-desc').value = '';
+        loadCampaign();
+      } catch (err) {
+        console.error(err);
+        status.textContent = 'Failed to submit idea.';
+      }
+    });
+
+    loadCampaign();
+  </script>
+</body>
+</html>

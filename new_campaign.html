@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Create Campaign — Idea Collector</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Create Campaign</h1>
+      <p class="muted">Define a theme to collect ideas</p>
+    </header>
+
+    <main>
+      <section class="card" style="max-width:720px">
+        <form id="campaign-form">
+          <label>Title</label>
+          <input id="title" class="input" required />
+          <label>Description</label>
+          <textarea id="description" class="input" rows="4"></textarea>
+          <div style="margin-top:12px;">
+            <button class="button" type="submit">Create</button>
+            <a href="index.html" class="button button-outline">Back</a>
+          </div>
+        </form>
+        <div id="status" class="muted" style="margin-top:12px"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="scripts.js"></script>
+  <script>
+    document.getElementById('campaign-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const title = document.getElementById('title').value.trim();
+      const description = document.getElementById('description').value.trim();
+      if (!title) return alert('Title is required');
+      const status = document.getElementById('status');
+      status.textContent = 'Creating...';
+      try {
+        const res = await apiPost('/api/campaigns', { title, description });
+        status.textContent = 'Created. Redirecting...';
+        window.location.href = `campaign.html?id=${res.id}`;
+      } catch (err) {
+        console.error(err);
+        status.textContent = 'Failed to create campaign.';
+      }
+    });
+  </script>
+</body>
+</html>
