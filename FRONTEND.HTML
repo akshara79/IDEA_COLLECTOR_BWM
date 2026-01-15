@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <title>Campus Idea Collector: Sustainability & Innovation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { colors: { primary: '#10b981', secondary: '#f59e0b' } } } }
+  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .glass { backdrop-filter: blur(10px); background: rgba(255,255,255,0.1); }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-fadeIn { animation: fadeIn 0.5s ease-out; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-emerald-50 to-blue-50 min-h-screen p-4 md:p-8 font-sans">
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <header class="text-center mb-12 animate-fadeIn">
+      <h1 class="text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-4">
+        <i class="fas fa-lightbulb mr-4"></i>Idea Collector
+      </h1>
+      <p class="text-xl text-gray-700 max-w-2xl mx-auto">Submit & organize student ideas for sustainability + innovation. Auto-summarize large inputs for college innovation cells.</p>
+    </header>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- Submission Form -->
+      <section class="glass rounded-3xl p-8 shadow-2xl border border-white/30 animate-fadeIn">
+        <h2 class="text-3xl font-bold text-gray-800 mb-6 flex items-center"><i class="fas fa-edit mr-3 text-primary"></i>Submit Idea</h2>
+        <form id="ideaForm" class="space-y-6">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Student Name <span class="text-red-500">*</span></label>
+            <input type="text" id="name" required class="w-full p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-primary focus:border-transparent transition-all" placeholder="Your full name">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Email/Roll No <span class="text-red-500">*</span></label>
+            <input type="text" id="contact" required class="w-full p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-primary focus:border-transparent transition-all" placeholder="example@risu.ac.in or 21AIML045">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Category <span class="text-red-500">*</span></label>
+            <select id="category" required class="w-full p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-primary focus:border-transparent">
+              <option value="">Choose one</option>
+              <option value="Sustainability">🌿 Sustainability</option>
+              <option value="Innovation">🚀 Innovation</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Impact (1-10) <span class="text-red-500">*</span></label>
+            <input type="range" id="impact" min="1" max="10" value="5" required class="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary">
+            <span id="impactValue" class="block text-sm font-mono text-secondary mt-1">5/10</span>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Tags (comma-separated)</label>
+            <input type="text" id="tags" class="w-full p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-primary focus:border-transparent" placeholder="e.g. solar, waste, AI, campus">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Your Idea <span class="text-red-500">*</span></label>
+            <textarea id="idea" rows="6" required class="w-full p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-primary focus:border-transparent resize-vertical" placeholder="Describe your idea in 2-4 sentences..."></textarea>
+          </div>
+          <button type="submit" class="w-full bg-gradient-to-r from-primary to-secondary text-white py-4 px-8 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 flex items-center justify-center">
+            <i class="fas fa-paper-plane mr-3"></i>Submit Idea
+          </button>
+        </form>
+      </section>
+
+      <!-- Dashboard -->
+      <section class="space-y-6 animate-fadeIn">
+        <!-- Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 bg-white/70 backdrop-blur-xl rounded-2xl p-6 shadow-xl border border-white/50">
+          <div class="text-center">
+            <div id="totalIdeas" class="text-3xl font-bold text-primary">0</div>
+            <div class="text-sm text-gray-600">Total Ideas</div>
+          </div>
+          <div class="text-center">
+            <div id="sustainCount" class="text-3xl font-bold text-emerald-600">0</div>
+            <div class="text-sm text-gray-600">Sustainability</div>
+          </div>
+          <div class="text-center">
+            <div id="innovCount" class="text-3xl font-bold text-secondary">0</div>
+            <div class="text-sm text-gray-600">Innovation</div>
+          </div>
+          <div class="text-center md:col-span-3 lg:col-span-1">
+            <div id="avgImpact" class="text-3xl font-bold text-purple-600">0</div>
+            <div class="text-sm text-gray-600">Avg Impact</div>
+          </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="glass rounded-2xl p-6 shadow-xl">
+          <div class="flex flex-wrap gap-3 mb-4">
+            <select id="filterCategory" class="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary">
+              <option value="">All Categories</option>
+              <option value="Sustainability">🌿 Sustainability</option>
+              <option value="Innovation">🚀 Innovation</option>
+            </select>
+            <input type="text" id="searchInput" placeholder="🔍 Search ideas/tags..." class="flex-1 px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary">
+            <button id="exportBtn" class="px-6 py-2 bg-secondary text-white rounded-xl font-semibold hover:bg-yellow-500 transition-all">
+              <i class="fas fa-download mr-2"></i>Export CSV
+            </button>
+            <button id="summarizeBtn" class="px-6 py-2 bg-primary text-white rounded-xl font-semibold hover:bg-emerald-600 transition-all ml-2">
+              <i class="fas fa-list mr-2"></i>Summarize All
+            </button>
+          </div>
+        </div>
+
+        <!-- Ideas List -->
+        <div class="glass rounded-3xl p-6 shadow-2xl border border-white/30 max-h-96 overflow-y-auto">
+          <h3 class="text-2xl font-bold text-gray-800 mb-4 flex items-center"><i class="fas fa-th-list mr-3 text-primary"></i>Ideas (<span id="displayCount">0</span>)</h3>
+          <div id="ideasList" class="space-y-4"></div>
+        </div>
+
+        <!-- Summary -->
+        <div id="summarySection" class="glass rounded-2xl p-6 shadow-xl hidden">
+          <h3 class="text-2xl font-bold text-gray-800 mb-4 flex items-center"><i class="fas fa-file-alt mr-3 text-purple-600"></i>Auto-Summary</h3>
+          <div id="summaryText" class="bg-white/50 p-6 rounded-xl text-gray-800 leading-relaxed whitespace-pre-wrap"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    let ideas = JSON.parse(localStorage.getItem('ideas')) || [];
+
+    // Form submission
+    document.getElementById('ideaForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const newIdea = {
+        id: Date.now(),
+        name: document.getElementById('name').value,
+        contact: document.getElementById('contact').value,
+        category: document.getElementById('category').value,
+        impact: parseInt(document.getElementById('impact').value),
+        tags: document.getElementById('tags').value.split(',').map(t => t.trim()).filter(t => t),
+        idea: document.getElementById('idea').value,
+        timestamp: new Date().toLocaleString()
+      };
+      ideas.unshift(newIdea);
+      localStorage.setItem('ideas', JSON.stringify(ideas));
+      e.target.reset();
+      document.getElementById('impactValue').textContent = '5/10';
+      updateDashboard();
+      alert('✅ Idea submitted! Check the dashboard.');
+    });
+
+    // Impact slider
+    document.getElementById('impact').addEventListener('input', e => {
+      document.getElementById('impactValue').textContent = `${e.target.value}/10`;
+    });
+
+    // Update dashboard
+    function updateDashboard(filteredIdeas = ideas) {
+      // Stats
+      document.getElementById('totalIdeas').textContent = ideas.length;
+      document.getElementById('sustainCount').textContent = ideas.filter(i => i.category === 'Sustainability').length;
+      document.getElementById('innovCount').textContent = ideas.filter(i => i.category === 'Innovation').length;
+      document.getElementById('avgImpact').textContent = Math.round(ideas.reduce((sum, i) => sum + i.impact, 0) / ideas.length || 0);
+
+      // Render list
+      const list = document.getElementById('ideasList');
+      list.innerHTML = filteredIdeas.map(idea => `
+        <div class="bg-white/70 p-5 rounded-xl hover:shadow-lg transition-all border-l-4 ${idea.category === 'Sustainability' ? 'border-emerald-500' : 'border-secondary'}">
+          <div class="flex justify-between items-start mb-2">
+            <h4 class="font-bold text-lg text-gray-800">${idea.name}</h4>
+            <span class="px-3 py-1 bg-primary/20 text-primary text-xs font-semibold rounded-full">${idea.impact}/10</span>
+          </div>
+          <p class="text-gray-700 mb-3">${idea.idea}</p>
+          <div class="flex flex-wrap gap-2 text-xs">
+            <span class="text-emerald-600 font-semibold">${idea.category}</span>
+            ${idea.tags.map(tag => `<span class="px-2 py-1 bg-gray-200 rounded-lg">#${tag}</span>`).join('')}
+          </div>
+          <div class="text-xs text-gray-500 mt-3">${idea.timestamp}</div>
+        </div>
+      `).join('') || '<p class="text-gray-500 italic text-center py-12">No ideas yet. Submit one above! 🎯</p>';
+      document.getElementById('displayCount').textContent = filteredIdeas.length;
+    }
+
+    // Filters
+    document.getElementById('filterCategory').addEventListener('change', filterIdeas);
+    document.getElementById('searchInput').addEventListener('input', debounce(filterIdeas, 300));
+
+    function filterIdeas() {
+      const category = document.getElementById('filterCategory').value;
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const filtered = ideas.filter(idea => 
+        (!category || idea.category === category) &&
+        (search === '' || 
+         idea.idea.toLowerCase().includes(search) || 
+         idea.tags.some(t => t.toLowerCase().includes(search)) ||
+         idea.name.toLowerCase().includes(search))
+      );
+      updateDashboard(filtered);
+    }
+
+    function debounce(fn, delay) {
+      let timeout;
+      return (...args) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => fn(...args), delay);
+      };
+    }
+
+    // Export CSV
+    document.getElementById('exportBtn').addEventListener('click', () => {
+      const csv = ['Name,Contact,Category,Impact,Tags,Idea,Timestamp\n'] + 
+        ideas.map(i => `"${i.name}","${i.contact}","${i.category}",${i.impact},"${i.tags.join(';')}","${i.idea.replace(/"/g,'""')}","${i.timestamp}"`).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `campus-ideas-${new Date().toISOString().split('T')[0]}.csv`; a.click();
+    });
+
+    // TextRank-inspired summarization (client-side extractive)
+    document.getElementById('summarizeBtn').addEventListener('click', () => {
+      const text = ideas.map(i => i.idea).join('\n\n');
+      const summary = summarizeText(text, 5); // Top 5 sentences
+      document.getElementById('summaryText').textContent = summary;
+      document.getElementById('summarySection').classList.remove('hidden');
+    });
+
+    function summarizeText(text, numSentences) {
+      const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 20);
+      if (sentences.length <= numSentences) return text;
+
+      // Simple TF-IDF + sentence scoring (TextRank-like)
+      const words = text.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/).filter(w => w.length > 3);
+      const wordFreq = {};
+      words.forEach(w => wordFreq[w] = (wordFreq[w] || 0) + 1);
+      const totalWords = words.length;
+      const idf = {}; // Simplified IDF
+      sentences.forEach(s => {
+        const sWords = s.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/).filter(w => w.length > 3);
+        sWords.forEach(w => idf[w] = (idf[w] || 0) + 1);
+      });
+
+      const scores = sentences.map((s, i) => {
+        const sWords = s.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/).filter(w => w.length > 3);
+        let score = 0;
+        sWords.forEach(w => {
+          const tf = wordFreq[w] / totalWords;
+          const idfScore = Math.log(sentences.length / (idf[w] || 1));
+          score += tf * idfScore;
+        });
+        return { sentence: s.trim(), score, index: i };
+      });
+
+      return scores.sort((a, b) => b.score - a.score).slice(0, numSentences)
+        .map(s => `${s.sentence.trim()} ${s.index + 1 === numSentences ? '' : ' '}`).join('\n\n');
+    }
+
+    // Init
+    updateDashboard();
+  </script>
+</body>
+</html>
